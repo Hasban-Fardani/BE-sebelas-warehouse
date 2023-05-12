@@ -5,13 +5,18 @@ from flask_migrate import Migrate
 from models.create_db import db
 from models.user_model import UserModel
 
-from controller import login_manager
+from middleware import login_manager
 from routes import blueprint
 
 from dotenv import load_dotenv
 from os import getenv
 
-load_dotenv()
+from sys import argv
+
+if 'prod' in argv or getenv('ON_VERCEL'):
+    load_dotenv('.prod.env')
+else:
+    load_dotenv('.env')
 
 # create new flask app
 app = Flask(__name__)
@@ -38,9 +43,11 @@ db.init_app(app)
 #
 login_manager.init_app(app)
 
-
 # migrate database
-Migrate(app, db)
+@app.before_first_request
+def migrate():
+    Migrate(app, db)
+
 
 if __name__ == "__main__":
     app.run(host="localhost", port=8080, debug=True)

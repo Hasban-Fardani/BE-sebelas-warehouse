@@ -7,16 +7,21 @@ from flask_login import UserMixin
 class UserModel(db.Model, UserMixin):
     __tablename__ = 'operators'
     id = Column(Integer, primary_key=True)
-    name = Column(String(50))
-    email = Column(String(255), unique=True)
-    NIP = Column(Integer, unique=True)
-    password = Column(String(255))
+    name = Column(String(30), nullable=False)
+    email = Column(String(50), unique=True)
+    type = Column(String(8), nullable=False)
+    NI = Column(Integer, unique=True, nullable=False)
+    password = Column(String(15), nullable=False)
     create_at = Column(DateTime, default=datetime.now)
     last_update = Column(DateTime, onupdate=datetime.now)
 
     def __repr__(self) -> str:
-        return f"<{self.name} {self.NIP}>"
-
+        match self.type:
+            case "operator" | "guru":
+                return f"<{self.name} NIP {self.NI}>"
+            case "siswa":
+                return f"<{self.name} NIS {self.NI}>"
+        
     # requirement for flask_login.LoginManager 
     def is_authenticated(self):
         return True
@@ -27,5 +32,5 @@ class UserModel(db.Model, UserMixin):
     def get_id(self):
         return str(self.id)
 
-    def load_user(self):
-        return UserModel.query.get(int(id))
+    # def load_user(self):
+    #     return UserModel.query.get(int(id))

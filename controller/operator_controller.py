@@ -36,7 +36,7 @@ class OperatorController:
                     message="data NIP/Password cannot empety"
                 )
             
-            user = UserModel.query.filter_by(NIP=data['NIP']).first()
+            user = UserModel.query.filter_by(NI=data['NIP']).first()
             if user == None:
                 return jsonify(
                     message="user not found"
