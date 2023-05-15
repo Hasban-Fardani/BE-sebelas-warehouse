@@ -1,24 +1,30 @@
 from os import getenv
 from datetime import datetime
 
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from flask_login import login_user, logout_user, current_user
-from sqlalchemy.orm.query import Query
+# from sqlalchemy.orm.query import Query
 
 from middleware import login_manager, login_required
 from models import *
+import peewee as p
 
 class OperatorController:
+
     def test_login():
         if current_user.is_authenticated:
             return "kamu telah login"
         else: 
             return "kamu belum login"
 
+    def get_all():
+        # return [user.__str__() for user in User.select()]
+        return {}
+    
     @login_required
     def get_operator_by_id(id: int):
         available = True
-        result = Query(UserModel).filter_by(id=id).first()
+        result = User.get_by_id(id).first()
         if not result.count():
             available = False
 
@@ -31,13 +37,14 @@ class OperatorController:
     def login_operator():
         try:
             data = request.get_json()
-            if data.get('NIP') is None or data.get('password') is None:
+            if data.get('NI') is None or data.get('password') is None:
                 return jsonify(
-                    message="data NIP/Password cannot empety"
+                    message="data NI/Password cannot empety"
                 )
             
-            user = UserModel.query.filter_by(NI=data['NIP']).first()
-            if user == None:
+            user = User.select().where(User.NI == data['NI']).first()
+            # print(data['NI'], user.name)
+            if user is None:
                 return jsonify(
                     message="user not found"
                 )
@@ -67,11 +74,13 @@ class OperatorController:
 
     @login_required
     def register_operator():
+        if current_user.type != "operator": 
+            return make_response(status=403, message="yo'ure not admin")
         data = request.get_json()
         sucess = True
         message = "sucess register new operator"
         try:
-            operator = UserModel(**data, create_at=datetime.now(), last_update=datetime.now())
+            operator = User(**data, create_at=datetime.now(), last_update=datetime.now())
             db.session.add(operator)
             db.session.commit()
         except Exception as e:

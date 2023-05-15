@@ -1,19 +1,17 @@
-from .create_db import db
+from .create_db import BaseModel
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
 from flask_login import UserMixin
+import peewee as p
 
-class UserModel(db.Model, UserMixin):
-    __tablename__ = 'operators'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(30), nullable=False)
-    email = Column(String(50), unique=True)
-    type = Column(String(8), nullable=False)
-    NI = Column(Integer, unique=True, nullable=False)
-    password = Column(String(15), nullable=False)
-    create_at = Column(DateTime, default=datetime.now)
-    last_update = Column(DateTime, onupdate=datetime.now)
+class User(BaseModel, UserMixin):
+    id          = p.IntegerField(primary_key=True)
+    name        = p.CharField(max_length=30)
+    email       = p.CharField(max_length=50, unique=True)
+    type        = p.CharField(max_length=8, null=False)
+    NI          = p.IntegerField(unique=True, null=False)
+    password    = p.CharField(max_length=15, null=False)
+    create_at   = p.DateTimeField(default=datetime.now)
+    last_update = p.DateTimeField(default=datetime.now)
 
     def __repr__(self) -> str:
         match self.type:
@@ -21,7 +19,9 @@ class UserModel(db.Model, UserMixin):
                 return f"<{self.name} NIP {self.NI}>"
             case "siswa":
                 return f"<{self.name} NIS {self.NI}>"
-        
+    
+    def __str__(self) -> str:
+        return self.__repr__()
     # requirement for flask_login.LoginManager 
     def is_authenticated(self):
         return True
@@ -31,6 +31,4 @@ class UserModel(db.Model, UserMixin):
         return False
     def get_id(self):
         return str(self.id)
-
-    # def load_user(self):
-    #     return UserModel.query.get(int(id))
+    
