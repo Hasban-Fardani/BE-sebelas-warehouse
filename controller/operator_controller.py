@@ -11,27 +11,33 @@ import peewee as p
 
 class OperatorController:
 
+    def get_self():
+        return jsonify(current_user.to_dict()) 
+
     def test_login():
         if current_user.is_authenticated:
-            return "kamu telah login"
+            return jsonify(
+                message="kamu telah login",
+                data=str(current_user)
+            )
         else: 
             return "kamu belum login"
 
     def get_all():
-        # return [user.__str__() for user in User.select()]
         return {}
     
     @login_required
     def get_operator_by_id(id: int):
         available = True
-        result = User.get_by_id(id).first()
-        if not result.count():
+        result = User.get_by_id(id)
+        if not result:
             available = False
 
+        result = User(result)
         return jsonify(
             id=id,
             available=available,
-            data=result,
+            data=result.to_dict(),
         )
     
     def login_operator():
@@ -43,7 +49,6 @@ class OperatorController:
                 )
             
             user = User.select().where(User.NI == data['NI']).first()
-            # print(data['NI'], user.name)
             if user is None:
                 return jsonify(
                     message="user not found"
@@ -57,7 +62,8 @@ class OperatorController:
             success = login_user(user)
             return jsonify(
                 data=data,
-                success=success
+                success=success,
+                message='Login successful!'
             )
         except Exception as e:
             return e.__str__()
@@ -90,5 +96,6 @@ class OperatorController:
         return jsonify(
             success = sucess,
             message = message,
+            user = User.json(),
             data = data
         )
